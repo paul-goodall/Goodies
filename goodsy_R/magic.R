@@ -3,7 +3,7 @@
 # This is not how R functions were intended to be used, but I find it saves time
 # and all the hassle relating to the ever-changing R-packaging setup nonsense.
 # Requirements:
-# 1. Every function must be attached to the g_ object, as a one-stop-shop
+# 1. Every function must be attached to the gm object, as a one-stop-shop
 # 2. Every function must have a 'help' component
 # 3. Args to functions must be safeguarded against null values
 # ==============================================================================
@@ -16,15 +16,15 @@ library('xml2')
 library('httr')
 library('stringi')
 # ==============================================================================
-g_ <- list()
+gm <- list()
 # ------------------------------------------------------------------------------
-g_$gsub <- function(.data=NULL, ss1=NULL, ss2=NULL){
+gm$gsub <- function(.data=NULL, ss1=NULL, ss2=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function just makes gsub pipe-friendly.
   Usage:
-  some_string_variable %>% g_$gsub(str1,str2)
+  some_stringmvariable %>% gm$gsub(str1,str2)
   --------------------
   '
   if(is.null(.data)) stop(help_message, call. = F)
@@ -36,16 +36,16 @@ g_$gsub <- function(.data=NULL, ss1=NULL, ss2=NULL){
   gsub(ss1,ss2,.data)
 }
 # ------------------------------------------------------------------------------
-g_$str_del <- function(.data=NULL, ss1=NULL){
+gm$str_del <- function(.data=NULL, ss1=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function deletes the specified substring.
   Usage:
-  some_string_variable %>% g_$str_del(str1)
-  
+  some_stringmvariable %>% gm$str_del(str1)
+
   This is equivalent to:
-  some_string_variable %>% g_$gsub(str1,"")
+  some_stringmvariable %>% gm$gsub(str1,"")
   --------------------
   '
   if(is.null(.data)) stop(help_message, call. = F)
@@ -56,7 +56,7 @@ g_$str_del <- function(.data=NULL, ss1=NULL){
   gsub(ss1,'',.data)
 }
 # ------------------------------------------------------------------------------
-g_$read_html <- function(.data=NULL, outfile=NULL, ip=NULL, port=NULL){
+gm$read_html <- function(.data=NULL, outfile=NULL, ip=NULL, port=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
@@ -67,7 +67,7 @@ g_$read_html <- function(.data=NULL, outfile=NULL, ip=NULL, port=NULL){
   Can take an optional ip and port if needed.
   Returns NULL if the url is not found.
   Usage:
-  webpage <- g_$read_html(.data=url, [my_html_file], [ip], [port])
+  webpage <- gm$read_html(.data=url, [my_html_file], [ip], [port])
   --------------------
   '
   if(is.null(.data)) stop(help_message, call. = F)
@@ -99,15 +99,15 @@ g_$read_html <- function(.data=NULL, outfile=NULL, ip=NULL, port=NULL){
   return (webpage)
 }
 # ------------------------------------------------------------------------------
-g_$left <- function(.data=NULL, numchars=NULL){
+gm$left <- function(.data=NULL, numchars=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function takes the first numchars from the beginning of the string.
   Usage:
-  some_string_variable %>% g_$left(numchars)
+  some_stringmvariable %>% gm$left(numchars)
   Example:
-  > "australia" %>% g_$left(6)
+  > "australia" %>% gm$left(6)
   [1] "austra"
   --------------------
   '
@@ -124,15 +124,15 @@ g_$left <- function(.data=NULL, numchars=NULL){
   return (my_str)
 }
 # ------------------------------------------------------------------------------
-g_$right <- function(.data=NULL, numchars=NULL){
+gm$right <- function(.data=NULL, numchars=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function takes the last numchars from the end of the string.
   Usage:
-  some_string_variable %>% g_$right(numchars)
+  some_stringmvariable %>% gm$right(numchars)
   Example:
-  > "australia" %>% g_$right(6)
+  > "australia" %>% gm$right(6)
   [1] "tralia"
   --------------------
   '
@@ -150,15 +150,15 @@ g_$right <- function(.data=NULL, numchars=NULL){
   return (my_str)
 }
 # ------------------------------------------------------------------------------
-g_$pad0 <- function(.data=NULL, num0=NULL){
+gm$pad0 <- function(.data=NULL, num0=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function pads an integer with leading zeroes and returns a string.
   Usage:
-  some_integer %>% g_$pad0(num0)
+  some_integer %>% gm$pad0(num0)
   Example:
-  > 21 %>% g_$pad0(6)
+  > 21 %>% gm$pad0(6)
   [1] "000021"
   --------------------
   '
@@ -171,36 +171,13 @@ g_$pad0 <- function(.data=NULL, num0=NULL){
   return (my_str)
 }
 # ------------------------------------------------------------------------------
-g_$phantom_get_url <- function(.data=NULL, my_outfile=NULL){
-  # ...............
-  help_message <- 'Must specify arg: .data
-  --------------------
-  This function uses phantomjs to evaluate the JS on a webpage and return the full file.
-  Usage:
-  some_URL %>% g_$phantom_get_url(my_outfile="my_file.html")
-  --------------------
-  '
-  if(is.null(.data)) stop(help_message, call. = F)
-  # ...............
-  # safeguards:
-  if(is.null(my_outfile)) stop('Must specify arg: my_outfile')
-  # ...............
-  if(!file.exists(my_outfile)){
-    com <- paste0('./phantomjs/bin/phantomjs js_eval_webpage.js ', .data, ' ', my_outfile)
-    cat(com,'\n')
-    system(com)
-  }
-  webpage <- read_html(my_outfile)
-  return (webpage)
-}
-# ------------------------------------------------------------------------------
-g_$fast_combine_csv_set <- function(.data=NULL, my_outfile=NULL){
+gm$fast_combine_csv_set <- function(.data=NULL, my_outfile=NULL){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
   This function concatenates a bunch of files into a master file.
   Usage:
-  some_glob_pattern %>% g_$fast_combine_csv_set(my_outfile="my_file.csv[.gz]")
+  some_glob_pattern %>% gm$fast_combine_csv_set(my_outfile="my_file.csv[.gz]")
   --------------------
   '
   if(is.null(.data)) stop(help_message, call. = F)
@@ -245,13 +222,13 @@ g_$fast_combine_csv_set <- function(.data=NULL, my_outfile=NULL){
 }
 
 # ------------------------------------------------------------------------------
-g_$countdesc <- function(.data=NULL, ...){
+gm$countdesc <- function(.data=NULL, ...){
   # ...............
   help_message <- 'Must specify arg: .data
   --------------------
-  This function uses phantomjs to evaluate the JS on a webpage and return the full file.
+  This function groups by the columns listed and counts descending.
   Usage:
-  some_df %>% g_$countdesc(grouping_var1,grouping_var2,...)
+  some_df %>% gm$countdesc(groupingmvar1,groupingmvar2,...)
   --------------------
   '
   if(is.null(.data)) stop(help_message, call. = F)
@@ -266,4 +243,6 @@ g_$countdesc <- function(.data=NULL, ...){
 # ==============================================================================
 # ==============================================================================
 # ==============================================================================
+# create a copy for legacy usage:
+g_ <- gm
 # ==============================================================================
