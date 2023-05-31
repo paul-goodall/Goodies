@@ -19,6 +19,11 @@ if not os.path.exists(goodies_dir):
 sys.path.append(goodies_dir)
 from goodsy_python import magic as gm
 
+pd  = gm.pd
+np  = gm.np
+cv2 = gm.cv2
+plt = gm.plt
+
 msg  = 'Congrats!  '
 msg += 'You now have Python Magic at your fingertips. '
 msg += 'Usage: gm.magic_function '

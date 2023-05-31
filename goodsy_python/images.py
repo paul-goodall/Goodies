@@ -27,7 +27,3 @@ pd.set_option('mode.chained_assignment', None)
 
 import bz2
 import _pickle as cPickle
-
-# ========================================
-from .general import *
-from .images import *
