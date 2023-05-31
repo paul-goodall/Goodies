@@ -19,6 +19,33 @@ if not os.path.exists(goodies_dir):
 sys.path.append(goodies_dir)
 from goodsy_python import magic as gm
 
-print('Congrats!  You now have Python Magic at your fingertips.  Call as gm.magic_function etc.')
+msg  = 'Congrats!  '
+msg += 'You now have Python Magic at your fingertips. '
+msg += 'Usage: gm.magic_function '
+print(msg)
+# ==============
+```
+
+## R Usage:
+
+```R
+# ==============
+repos_dir   <- '/Path/To/Your/Repos/'
+goodies_dir <- paste0(repos_dir, 'Goodies')
+magic_dir   <- paste0(goodies_dir, '/goodsy_R')
+
+if(!file.exists(goodies_dir)){
+  com <- paste0('git clone https://github.com/paul-goodall/Goodies.git ', goodies_dir)
+  cat(com)
+  system(com)
+}
+
+magic_R <- paste0(magic_dir, '/magic.R')
+source(magic_R)
+
+msg  <- 'Congrats!  '
+msg <- paste0(msg, 'You now have R Magic at your fingertips. ')
+msg <- paste0(msg, 'Usage: g_$magic_function '
+cat(msg)
 # ==============
 ```
