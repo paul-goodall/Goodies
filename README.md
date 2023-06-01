@@ -50,7 +50,7 @@ source(magic_R)
 
 msg <- 'Congrats!  '
 msg <- paste0(msg, 'You now have R Magic at your fingertips. ')
-msg <- paste0(msg, 'Usage: gm$magic_function '
+msg <- paste0(msg, 'Usage: gm$magic_function ')
 cat(msg)
 # ==============
 ```
