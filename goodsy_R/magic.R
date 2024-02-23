@@ -236,12 +236,68 @@ gm$countdesc <- function(.data=NULL, ...){
   return (.data %>% group_by(...) %>% summarise('n'=n()) %>% arrange(desc(n)))
 }
 # ------------------------------------------------------------------------------
-
+gm$list_select <- function(.data, col_names){
+  # ...............
+  help_message <- 'Must specify arg: .data
+  --------------------
+  This function selects certain features from a list of features.
+  Usage:
+  new_sublist <- orig_list %>% list_select(col_names)
+  --------------------
+  '
+  if(is.null(.data)) stop(help_message, call. = F)
+  # ...............
+  res <- data.frame(.data) %>% select(all_of(col_names)) %>% as.list()
+  return (res)
+}
+# ------------------------------------------------------------------------------
+gm$list_append <- function(.data, new_list){
+  # ...............
+  help_message <- 'Must specify arg: .data
+  --------------------
+  This function appends one list to another.
+  Usage:
+  combined_list <- orig_list %>% list_append(new_list)
+  --------------------
+  '
+  if(is.null(.data)) stop(help_message, call. = F)
+  # ...............
+  orig_list <- .data
+  orig_n    <- length(orig_list)
+  new_cols  <- names(new_list)
+  new_n     <- length(new_list)
+  orig_cols <- names(orig_list)
+  
+  for(nc in new_cols){
+    vals <- new_list[[nc]]
+    if(!(nc %in% orig_cols)){
+      vals <- c(rep(NA,orig_n),vals)
+    }
+    orig_list[[nc]] <- c(orig_list[[nc]], vals)
+  }
+  for(oc in orig_cols){
+    if(!(oc %in% new_cols)){
+      orig_list[[oc]] <- c(orig_list[[oc]], rep(NA,new_n))
+    }
+  }
+  return (orig_list)
+}
+# ------------------------------------------------------------------------------
 # ==============================================================================
 # ==============================================================================
-# ==============================================================================
-# ==============================================================================
-# ==============================================================================
+# non-pipe functions:
+gm$wget <- function(url, outfile=NULL){
+  if(is.null(outfile)){
+    com <- paste0('wget ', url)
+  } else {
+    com <- paste0('wget -O ', outfile, ' ', url)
+  }
+  cat(com,'\n')
+  system(com)
+}
+# ------------------------------------------------------------------------------
+'%+%' <- function(x, y){paste0(x,y)}
+# ------------------------------------------------------------------------------
 # ==============================================================================
 # create a copy for legacy usage:
 g_ <- gm

@@ -1,0 +1,3 @@
+# Chain example to Gzip a bunch of html files individually:
+
+find input_dir -name '*.html' -exec gzip {} \;
