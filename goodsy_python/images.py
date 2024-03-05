@@ -30,6 +30,55 @@ import _pickle as cPickle
 
 
 # ==========================================
+#
+# ==============================================================================
+#
+def gdf2labelme(geo_df,f_im,f_out):
+
+    shp0 = {}
+    shp0['label']    = ''
+    shp0['points']   = []
+    shp0['group_id'] = ''
+    shp0['description'] = ''
+    shp0['shape_type'] = ''
+    shp0['flags'] = {}
+
+    labelme = {}
+    labelme['version'] = "5.3.1"
+    labelme['flags']  = {}
+    labelme['shapes'] = []
+    labelme['imagePath'] = ''
+    labelme['imageData'] = ''
+    labelme['imageHeight'] = nx
+    labelme['imageWidth']  = ny
+
+    shapes = []
+    for i,row in geo_df.iterrows():
+        shp = shp0.copy()
+        shp['label'] = row.label
+        vx, vy = row.geometry.exterior.coords.xy
+        vx = list(np.array(vx))
+        vy = list(ny - np.array(vy))
+        ptys = [[x[0],x[1]] for x in zip(vx,vy)]
+        shp['points'] = ptys
+        shapes += [shp]
+
+    labelme['shapes'] = shapes
+
+    im1blob = open(f_im, "rb")
+    im1blob = base64.b64encode(im1blob.read()).decode()
+    labelme['imageData']   = im1blob
+    labelme['imagePath']   = f_im
+    labelme['imageHeight'] = nx
+    labelme['imageWidth']  = ny
+
+    json_data = json.dumps(labelme, indent=4)
+    with open(f_out, 'w') as f:
+        f.write(json_data)
+
+#
+# ==============================================================================
+
 
 
 # Produce a 2D Gaussian:
