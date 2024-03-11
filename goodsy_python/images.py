@@ -34,7 +34,7 @@ import _pickle as cPickle
 # ==============================================================================
 #
 ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
-    
+
     jpg_out = json_out.replace('.json','.jpg')
     f_im = os.path.basename(jpg_out)
     im = Image.open(im_in)
@@ -60,7 +60,7 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
     shapes = []
     for i,row in geo_df.iterrows():
         shp = shp0.copy()
-        shp['label'] = row[label_col] 
+        shp['label'] = row[label_col]
         vx, vy = row.geometry.exterior.coords.xy
         vx = list(np.array(vx))
         vy = list(ny - np.array(vy))
@@ -78,7 +78,7 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
     labelme['imageHeight'] = nx
     labelme['imageWidth']  = ny
 
-    
+
     im.save(jpg_out)
     json_data = json.dumps(labelme, indent=4)
     with open(json_out, 'w') as f:
@@ -87,16 +87,16 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 #
 # =====================
 
-# Takes a GeoDF with multiple Geometry columns that may well be MultiPolygons and makes it tall, 
+# Takes a GeoDF with multiple Geometry columns that may well be MultiPolygons and makes it tall,
 # with an individual polygon per row.
 def gdf_wide2tall(gdf,geom_cols,id_col):
-    
+
     # Remove the empty polygons
     empty_polygon = wkt.loads('POLYGON EMPTY')
     geom_list_dupes = {}
     for i in range(len(gdf)):
         for cn in geom_cols:
-            gr  = nm_bv_row.iloc[i]
+            gr  = gdf.iloc[i]
             gid = gr[id_col]
             gg  = gr[cn]
             if not gg.is_empty:
@@ -107,7 +107,7 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
                 geom_list_dupes[gname]['geom'] = gg
                 geom_list_dupes[gname]['geometry_label'] = cn
                 geom_list_dupes[gname]['suffix'] = gname_suffix
-                
+
     # dedupe the Multipolygons:
     geom_list = {}
     geom_list[id_col] = []
@@ -138,11 +138,11 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
                 geom_list['geometry_label'] += [ggl]
                 geom_list['geometry'] += [gg2]
                 idc += 1
-                
+
     new_gdf = gpd.GeoDataFrame(geom_list)
     return new_gdf
-    
-    
+
+
 #
 # ==============================================================================
 
