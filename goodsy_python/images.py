@@ -89,8 +89,8 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 
 # Takes a GeoDF with multiple Geometry columns that may well be MultiPolygons and makes it tall,
 # with an individual polygon per row.
-def gdf_wide2tall(gdf,geom_cols,id_col):
-
+def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
+    
     if type(id_col) == str:
         id_cols = [id_col]
     else:
@@ -107,9 +107,10 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
     
     id_col = 'tag'
     id_cols += ['tag']
-    keep_cols = gdf[id_cols].copy()
-    keep_cols = keep_cols.drop_duplicates() 
-
+    keep_cols += id_cols
+    keep_cols_df = gdf[keep_cols].copy()
+    keep_cols_df = keep_cols_df.drop_duplicates() 
+        
     # Remove the empty polygons
     empty_polygon = wkt.loads('POLYGON EMPTY')
     geom_list_dupes = {}
@@ -118,15 +119,24 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
             gr  = gdf.iloc[i]
             gid = gr[id_col]
             gg  = gr[cn]
-            if not gg.is_empty:
-                gname_suffix = f'n_{i:02}'
-                gname = f'{cn}_{gname_suffix}'
-                geom_list_dupes[gname] = {}
-                geom_list_dupes[gname][id_col] = gid
-                geom_list_dupes[gname]['geom'] = gg
-                geom_list_dupes[gname]['geometry_label'] = cn
-                geom_list_dupes[gname]['suffix'] = gname_suffix
-
+            #print('gg:')
+            #print(type(gg))
+            test = 0
+            if type(gg) == shapely.geometry.polygon.Polygon:
+                test = 1
+            if type(gg) == shapely.geometry.multipolygon.MultiPolygon:
+                test = 1   
+            if test == 1:
+                if gg is not None:
+                    if not gg.is_empty:
+                        gname_suffix = f'n_{i:02}'
+                        gname = f'{cn}_{gname_suffix}'
+                        geom_list_dupes[gname] = {}
+                        geom_list_dupes[gname][id_col] = gid
+                        geom_list_dupes[gname]['geom'] = gg
+                        geom_list_dupes[gname]['geometry_label'] = cn
+                        geom_list_dupes[gname]['suffix'] = gname_suffix
+                
     # dedupe the Multipolygons:
     geom_list = {}
     geom_list[id_col] = []
@@ -141,7 +151,7 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
         gid = gl[id_col]
         ggl = gl['geometry_label']
         if gg.geom_type == 'Polygon':
-            uid = f'{gid}_' + cn.replace(gl['suffix'],'') + f'_{idc:03}'
+            uid = f'{gid}_' + cn.replace(gl['suffix'],'') + f'{idc:03}'
             geom_list[id_col] += [gid]
             geom_list['uid']  += [uid]
             geom_list['id_count'] += [idc]
@@ -150,16 +160,19 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
             continue
         if gg.geom_type == 'MultiPolygon':
             for gg2 in gg.geoms:
-                uid = f'{gid}_' + cn.replace(gl['suffix'],'') + f'_{idc:03}'
+                uid = f'{gid}_' + cn.replace(gl['suffix'],'') + f'{idc:03}'
                 geom_list[id_col] += [gid]
                 geom_list['uid']  += [uid]
                 geom_list['id_count'] += [idc]
                 geom_list['geometry_label'] += [ggl]
                 geom_list['geometry'] += [gg2]
                 idc += 1
-
+                
+    geom_list['geometry_label'] = [gl.replace('geomcol_','') for gl in geom_list['geometry_label']]
+    
     new_gdf = gpd.GeoDataFrame(geom_list)
-    new_gdf = new_gdf.merge(keep_cols, how='left', on='tag')
+    
+    new_gdf = new_gdf.merge(keep_cols_df, how='left', on='tag')
     return new_gdf
 
 
