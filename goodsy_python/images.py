@@ -31,6 +31,61 @@ import _pickle as cPickle
 
 # ==========================================
 #
+
+from matplotlib import colors as mcolors
+import plotly.graph_objects as go
+import random
+
+
+
+
+def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=None,plotwidth=800,plotheight=800,plottheme='none'):
+
+    preferred_colours = ['deeppink','magenta','blueviolet','slateblue','cornflowerblue','deepskyblue','cyan','teal','lime','green','gold','darkorange','red','maroon']
+    random.shuffle(preferred_colours)
+    if colourcol is None:
+        labels = tall_gdf[labelcol].unique()
+        color_mapping = {}
+        for i in range(len(labels)):
+            color_mapping[labels[i]] = preferred_colours[i]
+        colourcol = 'plot_colour'
+        tall_gdf[colourcol] = tall_gdf[labelcol].map(color_mapping)
+
+    if textcol is None:
+        textcol = 'plot_label'
+        tall_gdf[textcol] = ''
+
+    if opacitycol is None:
+        opacitycol = 'plot_opacity'
+        tall_gdf[opacitycol] = 0.5
+
+    fig = go.Figure()
+    for ind, row in tall_gdf.iterrows():
+        x, y = row.geometry.exterior.coords.xy
+        x = ds.np.array(x)
+        y = ds.np.array(y)
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y,
+                opacity=row[opacitycol],
+                fill='toself',
+                mode='lines',
+                name=row[labelcol],
+                line_color=row[colourcol],
+                text=row[textcol]
+            )
+        )
+
+    fig.update_layout(
+        autosize=False,
+        width=plotwidth,
+        height=plotheight,
+        template=plottheme
+    )
+    return fig
+
+    
 # ==============================================================================
 #
 ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
@@ -88,7 +143,7 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 # =====================
 
 def dedupe_tall_gdf(tall_gdf, extra_dedup_cols=[]):
-    tall_gdf['row_gid'] = np.arange(len(tall_gdf)) 
+    tall_gdf['row_gid'] = np.arange(len(tall_gdf))
     tall_gdf['geom_area'] = tall_gdf.geometry.area
     xy = tall_gdf.geometry.centroid.get_coordinates()
     tall_gdf['geom_xc'] = xy.x
@@ -104,7 +159,7 @@ def dedupe_tall_gdf(tall_gdf, extra_dedup_cols=[]):
 # Takes a GeoDF with multiple Geometry columns that may well be MultiPolygons and makes it tall,
 # with an individual polygon per row.
 def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
-    
+
     if type(id_col) == str:
         id_cols = [id_col]
     else:
@@ -118,13 +173,13 @@ def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
             first_row = False
         else:
             gdf['tag'] = [f'{row.tag}_{row[idc]}' for ind,row in gdf.iterrows()]
-    
+
     id_col = 'tag'
     id_cols += ['tag']
     keep_cols += id_cols
     keep_cols_df = gdf[keep_cols].copy()
-    keep_cols_df = keep_cols_df.drop_duplicates() 
-        
+    keep_cols_df = keep_cols_df.drop_duplicates()
+
     # Remove the empty polygons
     empty_polygon = wkt.loads('POLYGON EMPTY')
     geom_list_dupes = {}
@@ -139,7 +194,7 @@ def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
             if type(gg) == shapely.geometry.polygon.Polygon:
                 test = 1
             if type(gg) == shapely.geometry.multipolygon.MultiPolygon:
-                test = 1   
+                test = 1
             if test == 1:
                 if gg is not None:
                     if not gg.is_empty:
@@ -150,7 +205,7 @@ def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
                         geom_list_dupes[gname]['geom'] = gg
                         geom_list_dupes[gname]['geometry_label'] = cn
                         geom_list_dupes[gname]['suffix'] = gname_suffix
-                
+
     # dedupe the Multipolygons:
     geom_list = {}
     geom_list[id_col] = []
@@ -181,11 +236,11 @@ def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
                 geom_list['geometry_label'] += [ggl]
                 geom_list['geometry'] += [gg2]
                 idc += 1
-                
+
     geom_list['geometry_label'] = [gl.replace('geomcol_','') for gl in geom_list['geometry_label']]
-    
+
     new_gdf = gpd.GeoDataFrame(geom_list)
-    
+
     new_gdf = new_gdf.merge(keep_cols_df, how='left', on='tag')
     return new_gdf
 
