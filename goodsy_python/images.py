@@ -91,6 +91,25 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 # with an individual polygon per row.
 def gdf_wide2tall(gdf,geom_cols,id_col):
 
+    if type(id_col) == str:
+        id_cols = [id_col]
+    else:
+        id_cols = id_col.copy()
+
+    gdf['tag'] = ''
+    first_row = True
+    for idc in id_cols:
+        if first_row:
+            gdf['tag'] = [f'{row[idc]}' for ind,row in gdf.iterrows()]
+            first_row = False
+        else:
+            gdf['tag'] = [f'{row.tag}_{row[idc]}' for ind,row in gdf.iterrows()]
+    
+    id_col = 'tag'
+    id_cols += ['tag']
+    keep_cols = gdf[id_cols].copy()
+    keep_cols = keep_cols.drop_duplicates() 
+
     # Remove the empty polygons
     empty_polygon = wkt.loads('POLYGON EMPTY')
     geom_list_dupes = {}
@@ -140,6 +159,7 @@ def gdf_wide2tall(gdf,geom_cols,id_col):
                 idc += 1
 
     new_gdf = gpd.GeoDataFrame(geom_list)
+    new_gdf = new_gdf.merge(keep_cols, how='left', on='tag')
     return new_gdf
 
 
