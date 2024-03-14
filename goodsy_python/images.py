@@ -87,6 +87,20 @@ ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 #
 # =====================
 
+def dedupe_tall_gdf(tall_gdf, extra_dedup_cols=[]):
+    tall_gdf['row_gid'] = np.arange(len(tall_gdf)) 
+    tall_gdf['geom_area'] = tall_gdf.geometry.area
+    xy = tall_gdf.geometry.centroid.get_coordinates()
+    tall_gdf['geom_xc'] = xy.x
+    tall_gdf['geom_yc'] = xy.y
+    dedup_cols = ['geom_area','geom_xc','geom_yc'] + extra_dedup_cols
+    select_rows = tall_gdf.groupby(dedup_cols)['row_gid'].min().reset_index()
+    result = select_rows[['row_gid']].merge(tall_gdf, how='left', on='row_gid')
+    return result
+
+#
+# =====================
+
 # Takes a GeoDF with multiple Geometry columns that may well be MultiPolygons and makes it tall,
 # with an individual polygon per row.
 def gdf_wide2tall(gdf, geom_cols, id_col, keep_cols=[]):
