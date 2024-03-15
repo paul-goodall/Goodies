@@ -39,9 +39,10 @@ import random
 
 
 
-def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=None,plotwidth=800,plotheight=800,plottheme='none'):
+def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=None,plottheme='none'):
 
-    preferred_colours = ['deeppink','magenta','blueviolet','slateblue','cornflowerblue','deepskyblue','cyan','teal','lime','green','gold','darkorange','red','maroon']
+    preferred_colours = ['deeppink','magenta','blueviolet','slateblue','cornflowerblue',
+                         'deepskyblue','cyan','teal','lime','green','gold','darkorange','red','maroon']
     random.shuffle(preferred_colours)
     if colourcol is None:
         labels = tall_gdf[labelcol].unique()
@@ -50,22 +51,23 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
             color_mapping[labels[i]] = preferred_colours[i]
         colourcol = 'plot_colour'
         tall_gdf[colourcol] = tall_gdf[labelcol].map(color_mapping)
-
+    
     if textcol is None:
         textcol = 'plot_label'
         tall_gdf[textcol] = ''
-
+    
     if opacitycol is None:
         opacitycol = 'plot_opacity'
         tall_gdf[opacitycol] = 0.5
-
-    fig = go.Figure()
+    
+    
+    # set up multiple traces
+    traces = []
     for ind, row in tall_gdf.iterrows():
         x, y = row.geometry.exterior.coords.xy
-        x = ds.np.array(x)
-        y = ds.np.array(y)
-        fig.add_trace(
-            go.Scatter(
+        x = np.array(x)
+        y = np.array(y)
+        my_trace = go.Scatter(
                 x=x,
                 y=y,
                 opacity=row[opacitycol],
@@ -75,15 +77,51 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
                 line_color=row[colourcol],
                 text=row[textcol]
             )
-        )
+        
+        traces += [my_trace]
+    
+    # set up the buttons:
+    buttons = []
+    my_dataset = ['all'] + list(tall_gdf.dataset.unique())
+    for dd in my_dataset:
+        if dd == 'all':
+            my_args2 = [{'visible':True}]
+            my_args1 = [{'visible':'legendonly'}]
+        else:
+            my_args2 = [{'visible':True},[i for i,x in enumerate(traces) if dd in x.name]]
+            my_args1 = [{'visible':'legendonly'},[i for i,x in enumerate(traces) if dd in x.name]]
+        
+        my_button = dict(method='restyle',
+                                label=dd,
+                                visible=True,
+                                args=my_args1,
+                                args2=my_args2,
+                                )
+        buttons += [my_button]
+    
+    # create the layout 
+    layout = go.Layout(
+        updatemenus=[
+            dict(
+                type='buttons',
+                direction='right',
+                x=0.5,
+                y=1.05,
+                showactive=True,
+                buttons=buttons
+            )
+        ],
+        title=dict(text='Toggle Layers by dataset:',x=0.4,y=0.99),
+        showlegend=True
+    )
+    
+    ouput_fig = go.Figure(data=traces,layout=layout)
 
-    fig.update_layout(
+    ouput_fig.update_layout(
         autosize=False,
-        width=plotwidth,
-        height=plotheight,
         template=plottheme
     )
-    return fig
+    return ouput_fig
 
     
 # ==============================================================================
