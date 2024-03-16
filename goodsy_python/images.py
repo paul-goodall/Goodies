@@ -39,6 +39,37 @@ import random
 # ==========================================
 #
 
+def get_polygon_coords(poly):
+    xy = gpd.GeoSeries(poly).get_coordinates()
+    xx = np.array(xy.x)
+    yy = np.array(xy.y)
+    return xx,yy
+
+def get_polygon_bbox(poly):
+    x,y = get_polygon_coords(poly)
+    x1 = x.min()
+    x2 = x.max()
+    y1 = y.min()
+    y2 = y.max()
+    return x1,x2,y1,y2
+
+# warning, this doesn't consider degrees the change in longitude as a func of lat.
+def get_polygon_squarebox(poly, margin_percent=0): 
+    x1,x2,y1,y2 = get_polygon_bbox(poly)
+    x0 = 0.5*(x1+x2)
+    y0 = 0.5*(y1+y2)
+    dx = x2-x1
+    dy = y2-y1
+    delta = np.max([dx,dy])
+    x1 = x0 + 0.5*(delta*(1+margin_percent/100))
+    x2 = x0 - 0.5*(delta*(1+margin_percent/100))
+    y1 = y0 + 0.5*(delta*(1+margin_percent/100))
+    y2 = y0 - 0.5*(delta*(1+margin_percent/100))
+    return x1,x2,y1,y2
+
+
+# ==========================================
+#
 # write a pickle:
 def wpkl(data, filename, compress=False):
     
