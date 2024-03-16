@@ -36,9 +36,60 @@ from matplotlib import colors as mcolors
 import plotly.graph_objects as go
 import random
 
+# ==========================================
+#
 
+# write a pickle:
+def wpkl(data, filename, compress=False):
+    
+    if filename == 'to_string':
+        return pickle.dumps(data, 0).decode()
+    
+    s3 = False
+    if 's3://' in filename:
+        s3 = True
+        
+    if s3:
+        fs = s3fs.S3FileSystem(anon=False)
+        pickle.dump(data, fs.open(filename, 'wb'))
+    else:
+        if compress:
+            with bz2.BZ2File(filename + '.pbz2', 'w') as f:
+                cPickle.dump(data, f)
+        else:
+            if os.path.exists(filename):
+                os.remove(filename)
+            dbfile = open(filename, 'ab')
+            pickle.dump(data, dbfile)
+            dbfile.close()
 
+# ==========================================
+#            
+# read a pickle:
+def rpkl(filename,pickle_string=None):
+    
+    if filename == 'from_string':
+        return pickle.loads(pickle_string.encode())
+    
+    s3 = False
+    if 's3://' in filename:
+        s3 = True
+        
+    if s3:
+        fs = s3fs.S3FileSystem(anon=False)
+        data = pickle.load(fs.open(filename, 'rb'))
+    else:
+        if filename[-4:] == 'pbz2':
+            data = bz2.BZ2File(filename, 'rb')
+            data = cPickle.load(data)
+        else:
+            dbfile = open(filename, 'rb')
+            data = pickle.load(dbfile)
+            dbfile.close()
+    return data
 
+# ==========================================
+#
 def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=None,plottheme='none'):
 
     preferred_colours = ['deeppink','magenta','blueviolet','slateblue','cornflowerblue',
@@ -123,7 +174,39 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
     )
     return ouput_fig
 
+# ==============================================================================
+#
+def pq2xy(pp,qq,hdr):
+    pp = np.array(pp)
+    qq = np.array(qq)
+    xx = hdr['x0'] + (pp - hdr['p0'])/hdr['dpdx']
+    yy = hdr['y0'] + (qq - hdr['q0'])/hdr['dqdy']
+    yy = hdr['ny'] - yy
+    return xx,yy   
+
+def xy2pq(xx,yy,hdr):
+    xx = np.array(xx)
+    yy = hdr['ny'] - np.array(yy)
+    pp = hdr['p0'] + (xx - hdr['x0']) * hdr['dpdx'] 
+    qq = hdr['q0'] + (yy - hdr['y0']) * hdr['dqdy'] 
+    return pp,qq 
+
+def clip_image_with_hdr(im,hdr,x1,x2,y1,y2):
+    im2 = im[y1:y2,x1:x2,:].copy()
     
+    x0 = 0.5 * (x1 + x2)
+    y0 = 0.5 * (y1 + y2)
+    p0,q0 = xy2pq(x0,y0,hdr)
+    ny,nx,nz = im2.shape
+    
+    hdr['x0'] = 0.5*nx
+    hdr['y0'] = 0.5*ny
+    hdr['nx'] = nx
+    hdr['ny'] = ny
+    hdr['p0'] = p0
+    hdr['q0'] = q0
+    
+    return im2,hdr
 # ==============================================================================
 #
 ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
