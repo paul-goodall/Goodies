@@ -68,6 +68,54 @@ def get_polygon_squarebox(poly, margin_percent=0):
     return x1,x2,y1,y2
 
 
+
+# ==========================================
+#
+def pil_imsave(img, jpgfile='/tmp/tmp.jpg'):
+    data = Image.fromarray(img)
+    #data = ImageOps.flip(data)
+    data.save(jpgfile)
+
+def jpeg2bytes(jpgfile):
+    im_blob1 = open(jpgfile, "rb").read()
+    im_blob2 = base64.b64encode(im_blob1)
+    return im_blob2
+
+def bytes2bytestring(bytestype):
+    return bytestype.decode()
+
+def bytestring2bytes(bytestring):
+    return bytestring.encode()
+
+def np2bytes(np_arr):
+    jpgfile='/tmp/tmp.jpg'
+    pil_imsave(np_arr, jpgfile)
+    im_blob2 = jpeg2bytes(jpgfile)
+    return im_blob2
+
+def np2bytestring(np_arr):
+    im_blob2 = np2bytes(np_arr)
+    im_blob3 = bytes2bytestring(im_blob2)
+    return im_blob3
+
+def bytes2jpeg(bytestype, jpgfile='/tmp/tmp.jpg'):
+    im_blob1 = base64.b64decode(bytestype)
+    with open(jpgfile, 'wb') as f:
+        f.write(im_blob1)
+    
+def bytes2np(bytestype):
+    jpgfile='/tmp/tmp.jpg'
+    bytes2jpeg(bytestype, jpgfile)
+    pil_im = Image.open(jpgfile)
+    numpy_array = np.array(pil_im)
+    return numpy_array
+    
+def bytestring2np(bytestring):
+    bytestype = bytestring2bytes(bytestring)
+    return bytes2np(bytestype)
+
+
+
 # ==========================================
 #
 # write a pickle:
