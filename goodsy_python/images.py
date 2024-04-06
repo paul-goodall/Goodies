@@ -36,6 +36,114 @@ from matplotlib import colors as mcolors
 import plotly.graph_objects as go
 import random
 
+
+import math
+from colorsys import hls_to_rgb
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+import matplotlib.colors as mcolors
+from matplotlib.patches import Rectangle
+
+
+def plot_colortable(colors, *, ncols=2, sort_colors=True):
+
+    cell_width = 212
+    cell_height = 22
+    swatch_width = 48
+    margin = 12
+
+    # Sort colors by hue, saturation, value and name.
+    if sort_colors is True:
+        names = sorted(
+            colors, key=lambda c: tuple(mcolors.rgb_to_hsv(mcolors.to_rgb(c))))
+    else:
+        names = list(colors)
+
+    n = len(names)
+    nrows = math.ceil(n / ncols)
+
+    width = cell_width * ncols + 2 * margin
+    height = cell_height * nrows + 2 * margin
+    dpi = 72
+
+    fig, ax = plt.subplots(figsize=(width / dpi, height / dpi), dpi=dpi)
+    fig.subplots_adjust(margin/width, margin/height,
+                        (width-margin)/width, (height-margin)/height)
+    ax.set_xlim(0, cell_width * ncols)
+    ax.set_ylim(cell_height * (nrows-0.5), -cell_height/2.)
+    ax.yaxis.set_visible(False)
+    ax.xaxis.set_visible(False)
+    ax.set_axis_off()
+
+    for i, name in enumerate(names):
+        row = i % nrows
+        col = i // nrows
+        y = row * cell_height
+
+        swatch_start_x = cell_width * col
+        text_pos_x = cell_width * col + swatch_width + 7
+
+        ax.text(text_pos_x, y, name, fontsize=14,
+                horizontalalignment='left',
+                verticalalignment='center')
+
+        ax.add_patch(
+            Rectangle(xy=(swatch_start_x, y-9), width=swatch_width,
+                      height=18, facecolor=colors[name], edgecolor='0.7')
+        )
+
+    return fig
+
+
+
+
+def hls2rgb(h,l=0.5,s=1.0):
+    return hls_to_rgb(h, l, s)
+
+    
+def rgb2hex(r, g, b):
+    if (0.0 <= r <= 1.0) and (0.0 <= g <= 1.0) and (0.0 <= b <= 1.0):
+        r = int(r*255)
+        g = int(g*255)
+        b = int(b*255)
+    return '#{:02x}{:02x}{:02x}'.format(r, g, b)
+
+def hls2hex(h,l=0.5,s=1.0):
+    r,g,b = hls_to_rgb(h, l, s)
+    return rgb2hex(r, g, b)
+
+def equidistant_colours(n=5, l=0.5, s=1.0, output='list'):
+    delta = 1.0/(n+1)
+    h = np.arange(n) * delta
+    if output == 'list':
+        colours = [ hls2hex(x,l,s) for x in h ]
+    else:
+        colours = {}
+        for i in range(n):
+            colours[f'colour_{i+1}_of_{n}'] = hls2hex(h[i],l,s)
+    return colours
+   
+    
+    
+colours_bright = equidistant_colours(n=20, output='dict')
+
+#plot_colortable(colours_bright, sort_colors=False)
+#plt.show()
+
+colours_light = equidistant_colours(n=20, l=0.7, output='dict')
+
+#plot_colortable(colours_light, sort_colors=False)
+#plt.show()
+
+colours_dark = equidistant_colours(n=20, l=0.3, output='dict')
+
+#plot_colortable(colours_dark, sort_colors=False)
+#plt.show()
+
+
+
 # ==========================================
 #
 
