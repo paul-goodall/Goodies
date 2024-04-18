@@ -258,6 +258,69 @@ def rfits(filename):
 #
 # ==============================================================================
 #
+def rtext(fn):
+    f = open(fn, "r")
+    txt = f.read()
+    f.close()
+    return txt
+
+def wtext(txt, fn, mode='overwrite'):
+    open_mode = 'w'
+    if mode == 'append':
+        open_mode = 'a'
+    f = open(fn, open_mode)
+    f.write(txt)
+    f.close()
+
+
+# write a pickle:
+def wpkl(data, filename, compress=False):
+    
+    if filename == 'to_string':
+        return pickle.dumps(data, 0).decode()
+    
+    s3 = False
+    if 's3://' in filename:
+        s3 = True
+        
+    if s3:
+        fs = s3fs.S3FileSystem(anon=False)
+        pickle.dump(data, fs.open(filename, 'wb'))
+    else:
+        if compress:
+            with bz2.BZ2File(filename + '.pbz2', 'w') as f:
+                cPickle.dump(data, f)
+        else:
+            if os.path.exists(filename):
+                os.remove(filename)
+            dbfile = open(filename, 'ab')
+            pickle.dump(data, dbfile)
+            dbfile.close()
+
+            
+# read a pickle:
+def rpkl(filename,pickle_string=None):
+    
+    if filename == 'from_string':
+        return pickle.loads(pickle_string.encode())
+    
+    s3 = False
+    if 's3://' in filename:
+        s3 = True
+        
+    if s3:
+        fs = s3fs.S3FileSystem(anon=False)
+        data = pickle.load(fs.open(filename, 'rb'))
+    else:
+        if filename[-4:] == 'pbz2':
+            data = bz2.BZ2File(filename, 'rb')
+            data = cPickle.load(data)
+        else:
+            dbfile = open(filename, 'rb')
+            data = pickle.load(dbfile)
+            dbfile.close()
+    return data
+
 #
 # ==============================================================================
 #
