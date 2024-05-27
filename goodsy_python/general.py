@@ -234,6 +234,109 @@ def download_image(url,filename):
 # ==============================================================================
 #
 
+# ===============================================
+
+
+def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
+    
+    my_table_header = '<tr class="header">\n'
+    for cn in list(df.columns):
+        my_table_header += f'<th>{cn}</th>\n'
+    my_table_header += '</tr>'
+        
+    my_table_rows = ''
+    for ind, row in df.iterrows():
+        my_table_rows += '<tr>\n'
+        for cn in list(df.columns):
+            my_table_rows += f'<td>{row[cn]}</td>\n'
+        my_table_rows += '</tr>\n'
+    
+    my_table_contents = my_table_header + '\n' + my_table_rows    
+    
+    smart_table_html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    #myInput {
+      background-image: url('/css/searchicon.png');
+      background-position: 10px 10px;
+      background-repeat: no-repeat;
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 20px 12px 40px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
+    #myTable {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #ddd;
+      font-size: 18px;
+    }
+
+    #myTable th, #myTable td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    #myTable tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+    #myTable tr.header, #myTable tr:hover {
+      background-color: #f1f1f1;
+    }
+    </style>
+    </head>
+    <body>
+
+    <h2>my_page_title</h2>
+
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.." title="Type in a name">
+
+    <table id="myTable">
+      my_table_contents
+    </table>
+
+    <script>
+    function myFunction() {
+      var input, filter, table, tr, td, i, txtValue;
+      input = document.getElementById("myInput");
+      filter = input.value.toUpperCase();
+      table = document.getElementById("myTable");
+      tr = table.getElementsByTagName("tr");
+      for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+          txtValue = td.textContent || td.innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        }       
+      }
+    }
+    </script>
+
+    </body>
+    </html>
+    '''
+    
+    smart_table_html = smart_table_html.replace('my_page_title', my_page_title)
+    smart_table_html = smart_table_html.replace('my_table_contents', my_table_contents)
+    
+    wtext(smart_table_html, html_file, mode='overwrite')
+    
+# ==========================================
+
 #
 # ==============================================================================
 #
