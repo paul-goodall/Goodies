@@ -28,6 +28,8 @@ pd.set_option('mode.chained_assignment', None)
 import bz2
 import _pickle as cPickle
 
+import shapely
+from shapely import wkt
 
 # ==========================================
 #
@@ -36,6 +38,12 @@ from matplotlib import colors as mcolors
 import plotly.graph_objects as go
 import random
 
+import base64
+
+from shapely.validation import make_valid
+from shapely.geometry import Point, Polygon
+from shapely.ops import transform
+import geopandas as gpd
 
 import math
 from colorsys import hls_to_rgb
@@ -102,7 +110,7 @@ def plot_colortable(colors, *, ncols=2, sort_colors=True):
 def hls2rgb(h,l=0.5,s=1.0):
     return hls_to_rgb(h, l, s)
 
-    
+
 def rgb2hex(r, g, b):
     if (0.0 <= r <= 1.0) and (0.0 <= g <= 1.0) and (0.0 <= b <= 1.0):
         r = int(r*255)
@@ -124,9 +132,9 @@ def equidistant_colours(n=5, l=0.5, s=1.0, output='list'):
         for i in range(n):
             colours[f'colour_{i+1}_of_{n}'] = hls2hex(h[i],l,s)
     return colours
-   
-    
-    
+
+
+
 colours_bright = equidistant_colours(n=20, output='dict')
 
 #plot_colortable(colours_bright, sort_colors=False)
@@ -162,7 +170,7 @@ def get_polygon_bbox(poly):
     return x1,x2,y1,y2
 
 # warning, this doesn't consider degrees the change in longitude as a func of lat.
-def get_polygon_squarebox(poly, margin_percent=0): 
+def get_polygon_squarebox(poly, margin_percent=0):
     x1,x2,y1,y2 = get_polygon_bbox(poly)
     x0 = 0.5*(x1+x2)
     y0 = 0.5*(y1+y2)
@@ -210,14 +218,14 @@ def bytes2jpeg(bytestype, jpgfile='/tmp/tmp.jpg'):
     im_blob1 = base64.b64decode(bytestype)
     with open(jpgfile, 'wb') as f:
         f.write(im_blob1)
-    
+
 def bytes2np(bytestype):
     jpgfile='/tmp/tmp.jpg'
     bytes2jpeg(bytestype, jpgfile)
     pil_im = Image.open(jpgfile)
     numpy_array = np.array(pil_im)
     return numpy_array
-    
+
 def bytestring2np(bytestring):
     bytestype = bytestring2bytes(bytestring)
     return bytes2np(bytestype)
@@ -228,14 +236,14 @@ def bytestring2np(bytestring):
 #
 # write a pickle:
 def wpkl(data, filename, compress=False):
-    
+
     if filename == 'to_string':
         return pickle.dumps(data, 0).decode()
-    
+
     s3 = False
     if 's3://' in filename:
         s3 = True
-        
+
     if s3:
         fs = s3fs.S3FileSystem(anon=False)
         pickle.dump(data, fs.open(filename, 'wb'))
@@ -251,17 +259,17 @@ def wpkl(data, filename, compress=False):
             dbfile.close()
 
 # ==========================================
-#            
+#
 # read a pickle:
 def rpkl(filename,pickle_string=None):
-    
+
     if filename == 'from_string':
         return pickle.loads(pickle_string.encode())
-    
+
     s3 = False
     if 's3://' in filename:
         s3 = True
-        
+
     if s3:
         fs = s3fs.S3FileSystem(anon=False)
         data = pickle.load(fs.open(filename, 'rb'))
@@ -289,16 +297,16 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
             color_mapping[labels[i]] = preferred_colours[i]
         colourcol = 'plot_colour'
         tall_gdf[colourcol] = tall_gdf[labelcol].map(color_mapping)
-    
+
     if textcol is None:
         textcol = 'plot_label'
         tall_gdf[textcol] = ''
-    
+
     if opacitycol is None:
         opacitycol = 'plot_opacity'
         tall_gdf[opacitycol] = 0.5
-    
-    
+
+
     # set up multiple traces
     traces = []
     for ind, row in tall_gdf.iterrows():
@@ -315,9 +323,9 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
                 line_color=row[colourcol],
                 text=row[textcol]
             )
-        
+
         traces += [my_trace]
-    
+
     # set up the buttons:
     buttons = []
     my_dataset = ['all'] + list(tall_gdf.dataset.unique())
@@ -328,7 +336,7 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
         else:
             my_args2 = [{'visible':True},[i for i,x in enumerate(traces) if dd in x.name]]
             my_args1 = [{'visible':'legendonly'},[i for i,x in enumerate(traces) if dd in x.name]]
-        
+
         my_button = dict(method='restyle',
                                 label=dd,
                                 visible=True,
@@ -336,8 +344,8 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
                                 args2=my_args2,
                                 )
         buttons += [my_button]
-    
-    # create the layout 
+
+    # create the layout
     layout = go.Layout(
         updatemenus=[
             dict(
@@ -352,7 +360,7 @@ def plot_tall_gdf(tall_gdf, labelcol, colourcol=None,textcol=None,opacitycol=Non
         title=dict(text='Toggle Layers by dataset:',x=0.4,y=0.99),
         showlegend=True
     )
-    
+
     ouput_fig = go.Figure(data=traces,layout=layout)
 
     ouput_fig.update_layout(
@@ -369,34 +377,34 @@ def pq2xy(pp,qq,hdr):
     xx = hdr['x0'] + (pp - hdr['p0'])/hdr['dpdx']
     yy = hdr['y0'] + (qq - hdr['q0'])/hdr['dqdy']
     yy = hdr['ny'] - yy
-    return xx,yy   
+    return xx,yy
 
 def xy2pq(xx,yy,hdr):
     xx = np.array(xx)
     yy = hdr['ny'] - np.array(yy)
-    pp = hdr['p0'] + (xx - hdr['x0']) * hdr['dpdx'] 
-    qq = hdr['q0'] + (yy - hdr['y0']) * hdr['dqdy'] 
-    return pp,qq 
+    pp = hdr['p0'] + (xx - hdr['x0']) * hdr['dpdx']
+    qq = hdr['q0'] + (yy - hdr['y0']) * hdr['dqdy']
+    return pp,qq
 
 def clip_image_with_hdr(im,hdr,x1,x2,y1,y2):
     im2 = im[y1:y2,x1:x2,:].copy()
-    
+
     x0 = 0.5 * (x1 + x2)
     y0 = 0.5 * (y1 + y2)
     p0,q0 = xy2pq(x0,y0,hdr)
     ny,nx,nz = im2.shape
-    
+
     hdr['x0'] = 0.5*nx
     hdr['y0'] = 0.5*ny
     hdr['nx'] = nx
     hdr['ny'] = ny
     hdr['p0'] = p0
     hdr['q0'] = q0
-    
+
     return im2,hdr
 # ==============================================================================
 #
-ddef gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
+def gdf2labelme(geo_df_xy,label_col,im_in,json_out,im_blob=False):
 
     jpg_out = json_out.replace('.json','.jpg')
     f_im = os.path.basename(jpg_out)

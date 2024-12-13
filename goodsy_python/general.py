@@ -12,6 +12,8 @@ import statistics
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
+
 from scipy import signal
 import scipy.optimize as opt
 from scipy.optimize import curve_fit
@@ -189,12 +191,14 @@ def save_pickle(data, filename, compress=True):
 # load a pickle:
 def load_pickle(filename):
     if filename[-4:] == 'pbz2':
-        data = bz2.BZ2File(filename, 'rb')
-        data = cPickle.load(data)
+        #data = bz2.BZ2File(filename, 'rb')
+        #data = cPickle.load(data)
+        data = pd.read_pickle(filename,'bz2')
     else:
-        dbfile = open(filename, 'rb')
-        data = pickle.load(dbfile)
-        dbfile.close()
+        #dbfile = open(filename, 'rb')
+        #data = pickle.load(dbfile)
+        #dbfile.close()
+        data = pd.read_pickle(filename)
     return data
 #
 # ==============================================================================
@@ -238,21 +242,21 @@ def download_image(url,filename):
 
 
 def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
-    
+
     my_table_header = '<tr class="header">\n'
     for cn in list(df.columns):
         my_table_header += f'<th>{cn}</th>\n'
     my_table_header += '</tr>'
-        
+
     my_table_rows = ''
     for ind, row in df.iterrows():
         my_table_rows += '<tr>\n'
         for cn in list(df.columns):
             my_table_rows += f'<td>{row[cn]}</td>\n'
         my_table_rows += '</tr>\n'
-    
-    my_table_contents = my_table_header + '\n' + my_table_rows    
-    
+
+    my_table_contents = my_table_header + '\n' + my_table_rows
+
     smart_table_html = '''
     <!DOCTYPE html>
     <html>
@@ -321,7 +325,7 @@ def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
           } else {
             tr[i].style.display = "none";
           }
-        }       
+        }
       }
     }
     </script>
@@ -329,12 +333,12 @@ def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
     </body>
     </html>
     '''
-    
+
     smart_table_html = smart_table_html.replace('my_page_title', my_page_title)
     smart_table_html = smart_table_html.replace('my_table_contents', my_table_contents)
-    
+
     wtext(smart_table_html, html_file, mode='overwrite')
-    
+
 # ==========================================
 
 #
@@ -378,14 +382,14 @@ def wtext(txt, fn, mode='overwrite'):
 
 # write a pickle:
 def wpkl(data, filename, compress=False):
-    
+
     if filename == 'to_string':
         return pickle.dumps(data, 0).decode()
-    
+
     s3 = False
     if 's3://' in filename:
         s3 = True
-        
+
     if s3:
         fs = s3fs.S3FileSystem(anon=False)
         pickle.dump(data, fs.open(filename, 'wb'))
@@ -400,17 +404,17 @@ def wpkl(data, filename, compress=False):
             pickle.dump(data, dbfile)
             dbfile.close()
 
-            
+
 # read a pickle:
 def rpkl(filename,pickle_string=None):
-    
+
     if filename == 'from_string':
         return pickle.loads(pickle_string.encode())
-    
+
     s3 = False
     if 's3://' in filename:
         s3 = True
-        
+
     if s3:
         fs = s3fs.S3FileSystem(anon=False)
         data = pickle.load(fs.open(filename, 'rb'))
@@ -792,21 +796,21 @@ def get_movie_frame(movie_file, frame_num):
 
 
 def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
-    
+
     my_table_header = '<tr class="header">\n'
     for cn in list(df.columns):
         my_table_header += f'<th>{cn}</th>\n'
     my_table_header += '</tr>'
-        
+
     my_table_rows = ''
     for ind, row in df.iterrows():
         my_table_rows += '<tr>\n'
         for cn in list(df.columns):
             my_table_rows += f'<td>{row[cn]}</td>\n'
         my_table_rows += '</tr>\n'
-    
-    my_table_contents = my_table_header + '\n' + my_table_rows    
-    
+
+    my_table_contents = my_table_header + '\n' + my_table_rows
+
     smart_table_html = '''
     <!DOCTYPE html>
     <html>
@@ -875,7 +879,7 @@ def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
           } else {
             tr[i].style.display = "none";
           }
-        }       
+        }
       }
     }
     </script>
@@ -883,12 +887,12 @@ def create_smart_table_html(df, html_file, my_page_title='My Smart Table'):
     </body>
     </html>
     '''
-    
+
     smart_table_html = smart_table_html.replace('my_page_title', my_page_title)
     smart_table_html = smart_table_html.replace('my_table_contents', my_table_contents)
-    
+
     wtext(smart_table_html, html_file, mode='overwrite')
-    
+
 # ==========================================
 
 
