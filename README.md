@@ -2,6 +2,8 @@
 
 ## Python Usage:
 
+See the Goodies-Python page [here](https://paul-goodall.github.io/Goodies/goodsy_python/)
+
 ```python
 # ==============
 # Python magic:
