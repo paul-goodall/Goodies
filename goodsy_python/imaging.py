@@ -31,9 +31,6 @@ import _pickle as cPickle
 import shapely
 from shapely import wkt
 
-# ==========================================
-#
-
 from matplotlib import colors as mcolors
 import plotly.graph_objects as go
 import random
@@ -54,6 +51,262 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.patches import Rectangle
 
+#
+# ==============================================================================
+#
+# print some useful information about a numpy array:
+def np_info(nda):
+    print("type\t: ", nda.dtype,"\nshape\t: ", nda.shape, "\nmin\t: ", nda.min(), "\nmax\t: ", nda.max(),"\n")
+
+#
+# ==============================================================================
+#
+def xvals(nx,ny,nz=1,norm=False):
+    x = np.arange(nx).reshape([1,1,nx])
+    y = np.arange(ny).reshape([1,ny,1])
+    z = np.arange(nz).reshape([nz,1,1])
+    m = x * (1+0*y) * (1+0*z)
+    if nz == 1:
+        m = m.reshape([ny,nx])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def yvals(nx,ny,nz=1,norm=False):
+    x = np.arange(nx).reshape([1,1,nx])
+    y = np.arange(ny).reshape([1,ny,1])
+    z = np.arange(nz).reshape([nz,1,1])
+    m = (1+0*x) * y * (1+0*z)
+    if nz == 1:
+        m = m.reshape([ny,nx])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def zvals(nx,ny,nz=1,norm=False):
+    x = np.arange(nx).reshape([1,1,nx])
+    y = np.arange(ny).reshape([1,ny,1])
+    z = np.arange(nz).reshape([nz,1,1])
+    m = (1+0*x) * (1+0*y) * z
+    if nz == 1:
+        m = m.reshape([ny,nx])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def svals(nx,ny,nz=1,norm=False):
+    m = xvals(nx,ny,nz) + nx*yvals(1,ny,nz) + nx*ny*zvals(1,1,nz)
+    if nz == 1:
+        m = m.reshape([ny,nx])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rvals(nx,ny,nz=1,x0=0,y0=0,z0=0,norm=False):
+    x = xvals(nx,ny,nz) - x0
+    y = yvals(nx,ny,nz) - y0
+    z = zvals(nx,ny,nz) - z0
+    m = (x**2 + y**2 + z**2)**0.5
+    if nz == 1:
+        m = m.reshape([ny,nx])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rgb_xvals(nx,ny,nz=1,norm=False):
+    c = np.arange(3).reshape([1,1,1,3])
+    x = np.arange(nx).reshape([1,1,nx,1])
+    y = np.arange(ny).reshape([1,ny,1,1])
+    z = np.arange(nz).reshape([nz,1,1,1])
+    m = (1+0*c) * x * (1+0*y) * (1+0*z)
+    if nz == 1:
+        m = m.reshape([ny,nx,3])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rgb_yvals(nx,ny,nz=1,norm=False):
+    c = np.arange(3).reshape([1,1,1,3])
+    x = np.arange(nx).reshape([1,1,nx,1])
+    y = np.arange(ny).reshape([1,ny,1,1])
+    z = np.arange(nz).reshape([nz,1,1,1])
+    m = (1+0*c) * (1+0*x) * y * (1+0*z)
+    if nz == 1:
+        m = m.reshape([ny,nx,3])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rgb_zvals(nx,ny,nz=1,norm=False):
+    c = np.arange(3).reshape([1,1,1,3])
+    x = np.arange(nx).reshape([1,1,nx,1])
+    y = np.arange(ny).reshape([1,ny,1,1])
+    z = np.arange(nz).reshape([nz,1,1,1])
+    m = (1+0*c) * (1+0*x) * (1+0*y) * z
+    if nz == 1:
+        m = m.reshape([ny,nx,3])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rgb_svals(nx,ny,nz=1,norm=False):
+    m = rgb_xvals(nx,ny,nz) + nx*rgb_yvals(1,ny,nz) + nx*ny*rgb_zvals(1,1,nz)
+    if nz == 1:
+        m = m.reshape([ny,nx,3])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def rgb_rvals(nx,ny,nz=1,x0=0,y0=0,z0=0,norm=False):
+    x = rgb_xvals(nx,ny,nz) - x0
+    y = rgb_yvals(nx,ny,nz) - y0
+    z = rgb_zvals(nx,ny,nz) - z0
+    m = (x**2 + y**2 + z**2)**0.5
+    if nz == 1:
+        m = m.reshape([ny,nx,3])
+    if norm:
+        m = m/np.max(m)
+    return m
+#
+# ==============================================================================
+#
+def downsize_image(fn=None,pc='10%',outfile='test.jpg',qual=90, comfile=None):
+    if fn is None:
+        print('must specify an input image name.\n')
+    else:
+        com = f'convert {fn}  -resize {pc} -quality {qual} {outfile}'
+        print(com)
+        if comfile is None:
+            os.system(com)
+        else:
+            com += ';\n'
+            wTXT(com, comfile)
+            print(f'command written to {comfile}')
+
+
+
+#
+# ==============================================================================
+#
+def cv2_transform(im, angle=0, scale=1.0):
+    im_x = im.shape[1]
+    im_y = im.shape[0]
+    center = (im_x//2, im_y//2)
+    rot_mat = cv2.getRotationMatrix2D( center, angle, scale )
+    im_trans = cv2.warpAffine(im, rot_mat, (im_x, im_y))
+    return im_trans
+#
+# ==============================================================================
+#
+
+def slice_geo_image(im0, hdr0,x1,x2,y1,y2):
+    im = im0[y1:y2,x1:x2,:].copy()
+    ny0,nx0,nz0 = im0.shape
+    cx0 = 0.5*(x1+x2)
+    cy0 = 0.5*(y1+y2)
+    ny,nx,nz = im.shape
+    cx = nx / 2
+    cy = ny / 2
+    pp0,qq0 = pixels2coords_hdr(cx0, cy0, hdr0)
+    hdr = hdr0.copy()
+    hdr['crval1'] = pp0
+    hdr['crval2'] = qq0
+    hdr['naxis1'] = nx
+    hdr['naxis2'] = ny
+    hdr['crpix1'] = cx
+    hdr['crpix2'] = cy
+    hdr['translationX'] = 0
+    hdr['translationY'] = 0
+    return im, hdr
+
+#
+# ==============================================================================
+#
+def coords2pixels_hdr(pp,qq, hdr):
+    if 'crota1' in hdr:
+        cr1 = hdr['crota1']
+    else:
+        cr1 = 0.0
+    cr1c = math.cos(cr1*math.pi/180)
+    cr1s = math.sin(cr1*math.pi/180)
+    p0   = hdr['crval1']
+    q0   = hdr['crval2']
+    x0   = hdr['crpix1']
+    y0   = hdr['crpix2']
+    cd1  = hdr['cdelt1']
+    cd2  = hdr['cdelt2']
+    dp   = pp - p0
+    dq   = qq - q0
+    xx   = x0 + (dp/cd1)*cr1c + (dq/cd2)*cr1s
+    yy   = y0 - (dp/cd1)*cr1s + (dq/cd2)*cr1c
+    return xx,yy
+#
+# ==============================================================================
+#
+def pixels2coords_hdr(xx,yy, hdr):
+    if 'crota1' in hdr:
+        cr1 = hdr['crota1']
+    else:
+        cr1 = 0.0
+    cr1c = math.cos(cr1*math.pi/180)
+    cr1s = math.sin(cr1*math.pi/180)
+    p0   = hdr['crval1']
+    q0   = hdr['crval2']
+    x0   = hdr['crpix1']
+    y0   = hdr['crpix2']
+    cd1  = hdr['cdelt1']
+    cd2  = hdr['cdelt2']
+    dx   = xx - x0
+    dy   = yy - y0
+    pp   = p0 + (dx*cd1)*cr1c - (dy*cd2)*cr1s
+    qq   = q0 + (dx*cd1)*cr1s + (dy*cd2)*cr1c
+    return pp,qq
+#
+# ==============================================================================
+#
+def get_coord_bounds(hdr):
+    p1,q1 = pixels2coords_hdr(-0.5,-0.5, hdr)
+    p2,q2 = pixels2coords_hdr(hdr['naxis1']-0.5,hdr['naxis2']-0.5, hdr)
+    return p1,p2,q1,q2
+#
+# ==============================================================================
+#
+def coord_rotation(x1,y1,theta,nx,ny,scale):
+    cr1c = math.cos(theta*math.pi/180)
+    cr1s = math.sin(theta*math.pi/180)
+    x0 = nx/2
+    y0 = ny/2
+    dx   = x1 - x0
+    dy   = y1 - y0
+    x2   = x0 + scale*(dx*cr1c - dy*cr1s)
+    y2   = y0 + scale*(dx*cr1s + dy*cr1c)
+    return x2,y2
+#
+# ==============================================================================
+#
+
+
+#
+# ==============================================================================
+#
 
 def plot_colortable(colors, *, ncols=2, sort_colors=True):
 
@@ -104,12 +357,16 @@ def plot_colortable(colors, *, ncols=2, sort_colors=True):
 
     return fig
 
-
-
+#
+# ==============================================================================
+#
 
 def hls2rgb(h,l=0.5,s=1.0):
     return hls_to_rgb(h, l, s)
 
+#
+# ==============================================================================
+#
 
 def rgb2hex(r, g, b):
     if (0.0 <= r <= 1.0) and (0.0 <= g <= 1.0) and (0.0 <= b <= 1.0):
@@ -118,9 +375,17 @@ def rgb2hex(r, g, b):
         b = int(b*255)
     return '#{:02x}{:02x}{:02x}'.format(r, g, b)
 
+#
+# ==============================================================================
+#
+
 def hls2hex(h,l=0.5,s=1.0):
     r,g,b = hls_to_rgb(h, l, s)
     return rgb2hex(r, g, b)
+
+#
+# ==============================================================================
+#
 
 def equidistant_colours(n=5, l=0.5, s=1.0, output='list'):
     delta = 1.0/(n+1)
@@ -133,7 +398,9 @@ def equidistant_colours(n=5, l=0.5, s=1.0, output='list'):
             colours[f'colour_{i+1}_of_{n}'] = hls2hex(h[i],l,s)
     return colours
 
-
+#
+# ==============================================================================
+#
 
 colours_bright = equidistant_colours(n=20, output='dict')
 
@@ -150,9 +417,8 @@ colours_dark = equidistant_colours(n=20, l=0.3, output='dict')
 #plot_colortable(colours_dark, sort_colors=False)
 #plt.show()
 
-
-
-# ==========================================
+#
+# ==============================================================================
 #
 
 def get_polygon_coords(poly):
@@ -161,6 +427,10 @@ def get_polygon_coords(poly):
     yy = np.array(xy.y)
     return xx,yy
 
+#
+# ==============================================================================
+#
+
 def get_polygon_bbox(poly):
     x,y = get_polygon_coords(poly)
     x1 = x.min()
@@ -168,6 +438,10 @@ def get_polygon_bbox(poly):
     y1 = y.min()
     y2 = y.max()
     return x1,x2,y1,y2
+
+#
+# ==============================================================================
+#
 
 # warning, this doesn't consider degrees the change in longitude as a func of lat.
 def get_polygon_squarebox(poly, margin_percent=0):
@@ -185,23 +459,41 @@ def get_polygon_squarebox(poly, margin_percent=0):
 
 
 
-# ==========================================
 #
+# ==============================================================================
+#
+
 def pil_imsave(img, jpgfile='/tmp/tmp.jpg'):
     data = Image.fromarray(img)
     #data = ImageOps.flip(data)
     data.save(jpgfile)
+
+#
+# ==============================================================================
+#
 
 def jpeg2bytes(jpgfile):
     im_blob1 = open(jpgfile, "rb").read()
     im_blob2 = base64.b64encode(im_blob1)
     return im_blob2
 
+#
+# ==============================================================================
+#
+
 def bytes2bytestring(bytestype):
     return bytestype.decode()
 
+#
+# ==============================================================================
+#
+
 def bytestring2bytes(bytestring):
     return bytestring.encode()
+
+#
+# ==============================================================================
+#
 
 def np2bytes(np_arr):
     jpgfile='/tmp/tmp.jpg'
@@ -209,15 +501,27 @@ def np2bytes(np_arr):
     im_blob2 = jpeg2bytes(jpgfile)
     return im_blob2
 
+#
+# ==============================================================================
+#
+
 def np2bytestring(np_arr):
     im_blob2 = np2bytes(np_arr)
     im_blob3 = bytes2bytestring(im_blob2)
     return im_blob3
 
+#
+# ==============================================================================
+#
+
 def bytes2jpeg(bytestype, jpgfile='/tmp/tmp.jpg'):
     im_blob1 = base64.b64decode(bytestype)
     with open(jpgfile, 'wb') as f:
         f.write(im_blob1)
+
+#
+# ==============================================================================
+#
 
 def bytes2np(bytestype):
     jpgfile='/tmp/tmp.jpg'
@@ -226,62 +530,18 @@ def bytes2np(bytestype):
     numpy_array = np.array(pil_im)
     return numpy_array
 
+#
+# ==============================================================================
+#
+
 def bytestring2np(bytestring):
     bytestype = bytestring2bytes(bytestring)
     return bytes2np(bytestype)
 
-
-
 # ==========================================
 #
 # write a pickle:
-def wpkl(data, filename, compress=False):
 
-    if filename == 'to_string':
-        return pickle.dumps(data, 0).decode()
-
-    s3 = False
-    if 's3://' in filename:
-        s3 = True
-
-    if s3:
-        fs = s3fs.S3FileSystem(anon=False)
-        pickle.dump(data, fs.open(filename, 'wb'))
-    else:
-        if compress:
-            with bz2.BZ2File(filename + '.pbz2', 'w') as f:
-                cPickle.dump(data, f)
-        else:
-            if os.path.exists(filename):
-                os.remove(filename)
-            dbfile = open(filename, 'ab')
-            pickle.dump(data, dbfile)
-            dbfile.close()
-
-# ==========================================
-#
-# read a pickle:
-def rpkl(filename,pickle_string=None):
-
-    if filename == 'from_string':
-        return pickle.loads(pickle_string.encode())
-
-    s3 = False
-    if 's3://' in filename:
-        s3 = True
-
-    if s3:
-        fs = s3fs.S3FileSystem(anon=False)
-        data = pickle.load(fs.open(filename, 'rb'))
-    else:
-        if filename[-4:] == 'pbz2':
-            data = bz2.BZ2File(filename, 'rb')
-            data = cPickle.load(data)
-        else:
-            dbfile = open(filename, 'rb')
-            data = pickle.load(dbfile)
-            dbfile.close()
-    return data
 
 # ==========================================
 #
@@ -838,12 +1098,18 @@ class read_png:
     self.im = x
 
 
+#
+# ==============================================================================
+#
 def determine_image_depth(im):
     max_vals = np.array([1,255,65535])
     img_max = im.max()
     delta = abs(max_vals - img_max)
     im_threshold = max_vals[np.where(delta == min(delta))][0]
+    im_threshold = im_threshold.astype(np.float32) * 1.0
     return (im_threshold)
+
+
 
 
 def write_png(x, filename, switch_rgb=False, depth=16):
