@@ -12,40 +12,16 @@ import statistics
 import numpy as np
 import pandas as pd
 import xlsxwriter
+from openpyxl import load_workbook
+from astropy.io import fits
 
 from pathlib import Path
-
-from scipy import signal
-import scipy.optimize as opt
-from scipy.optimize import curve_fit
-
-from skimage import data
-from skimage import transform
-from astropy.io import fits
-from pandasql import sqldf
-from datetime import datetime
-
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import matplotlib.patches as patches
-import matplotlib.ticker as ticker
 
 import pickle
 import bz2
 import _pickle as cPickle
 
-from osgeo import gdal
-from osgeo import ogr
-from osgeo import osr
-from osgeo import gdalconst
-
-from shapely.geometry import Point, Polygon
-import geopandas as gpd
-
 import io
-from PIL import Image
-import hashlib
-import base64
 
 pd.set_option('mode.chained_assignment', None)
 #
@@ -201,7 +177,21 @@ def rFITS(filename):
 # ==============================================================================
 #
 
-def load_img(filename, switch_rgb=True, normalise=True,flip_y = True):
+#
+# ==============================================================================
+#
+def determine_image_depth(im):
+    max_vals = np.array([1,255,65535])
+    img_max = im.max()
+    delta = abs(max_vals - img_max)
+    im_threshold = max_vals[np.where(delta == min(delta))][0]
+    im_threshold = im_threshold.astype(np.float32) * 1.0
+    return (im_threshold)
+#
+# ==============================================================================
+#
+
+def rIMG(filename, switch_rgb=True, normalise=True,flip_y = True):
     im_suffix = os.path.splitext(filename)[-1]
     x = cv2.imread(filename, -1)
     if flip_y:
@@ -216,7 +206,7 @@ def load_img(filename, switch_rgb=True, normalise=True,flip_y = True):
 #
 # ==============================================================================
 #
-def save_img(x, filename, switch_rgb=True, depth=16,flip_y = True):
+def wIMG(x, filename, switch_rgb=True, depth=16,flip_y = True):
     col_max = determine_image_depth(x)
     #print(col_max)
     im_suffix = os.path.splitext(filename)[-1]
@@ -248,7 +238,12 @@ def save_img(x, filename, switch_rgb=True, depth=16,flip_y = True):
 # ==============================================================================
 #
 
-def df2html(df, html_file, my_page_title='My Smart Table'):
+def df2html(df0, html_file, my_page_title='My Smart Table'):
+
+    df = df0.copy()
+    search_col = [ ' '.join([str(x) for x in row.tolist()]) for ind, row in df.iterrows() ]
+    # make this the first column in the data frame:
+    df.insert(0, 'search_col', search_col, allow_duplicates=True)
 
     my_table_header = '<tr class="header">\n'
     for cn in list(df.columns):
@@ -301,9 +296,19 @@ def df2html(df, html_file, my_page_title='My Smart Table'):
       border-bottom: 1px solid #ddd;
     }
 
+
     #myTable tr.header, #myTable tr:hover {
       background-color: #f1f1f1;
     }
+
+    /* HIDE the first column in the table, which is the search column */
+    #myTable tr th:first-child {
+        display: none;
+    }
+    #myTable tr td:first-child {
+        display: none;
+    }
+
     </style>
     </head>
     <body>
@@ -349,63 +354,6 @@ def df2html(df, html_file, my_page_title='My Smart Table'):
 #
 # ==============================================================================
 #
-# Create meaningful image headers:
-def create_astro_hdr(fname,xoff=0,yoff=0):
-    gd = gdal.Open(fname)
-    naxis1 = gd.RasterXSize
-    naxis2 = gd.RasterYSize
-    crval1,cdelt1,crpix1,crval2,crpix2,cdelt2 = gd.GetGeoTransform()
-
-    # correct for the offsets:
-    crval1 += xoff
-    crval2 += yoff
-
-    p1 = crval1 + (0 - crpix1)*cdelt1
-    p2 = crval1 + (naxis1 - crpix1)*cdelt1
-    q1 = crval2 + (0 - crpix2)*cdelt2
-    q2 = crval2 + (naxis2 - crpix2)*cdelt2
-
-    # Let's reference everything to the centre of the image:
-    cx0 = naxis1 / 2
-    cy0 = naxis2 / 2
-    cp0 = 0.5*(p1 + p2)
-    cq0 = 0.5*(q1 + q2)
-
-    # I flip the image y-axes, so:
-    cdelt2 = -cdelt2
-
-    pix_dx = cn.deg2rad * cdelt1 * cn.r_earth
-    pix_dy = cn.deg2rad * cdelt2 * cn.r_earth
-    h = {}
-    h['naxis1'] = naxis1
-    h['naxis2'] = naxis2
-    h['naxis3'] = 3
-    h['cdelt1'] = cdelt1
-    h['cdelt2'] = cdelt2
-    h['cdelt3'] = 1
-    h['crpix1'] = cx0
-    h['crpix2'] = cy0
-    h['crpix3'] = 0
-    h['crval1'] = cp0
-    h['crval2'] = cq0
-    h['crval3'] = 0
-    h['crota1'] = 0
-    h['crota2'] = 0
-    h['crota3'] = 0
-    h['pix_dx'] = pix_dx
-    h['pix_dy'] = pix_dy
-    return h
-#
-# ==============================================================================
-#
-def linux_fastcombine_csvs(my_csv_glob, first_file, outfile):
-    if not os.path.exists(outfile):
-        com = 'ulimit -n 2048; head -n 1 first_file > outfile; tail -n +2 -q my_csv_glob >> outfile;'
-        com = com.replace('outfile', outfile)
-        com = com.replace('my_csv_glob', my_csv_glob)
-        com = com.replace('first_file', first_file)
-        print(com)
-        os.system(com)
 
 #
 # ==============================================================================

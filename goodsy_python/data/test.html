@@ -1,0 +1,166 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    #myInput {
+      background-image: url('/css/searchicon.png');
+      background-position: 10px 10px;
+      background-repeat: no-repeat;
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 20px 12px 40px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
+    #myTable {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #ddd;
+      font-size: 18px;
+    }
+
+    #myTable th, #myTable td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    #myTable tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+
+    #myTable tr.header, #myTable tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    /* HIDE the first column in the table, which is the search column */
+    #myTable tr th:first-child {
+        display: none;
+    }
+    #myTable tr td:first-child {
+        display: none;
+    }
+
+    </style>
+    </head>
+    <body>
+
+    <h2>Table of Dates that is string searchable</h2>
+
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.." title="Type in a name">
+
+    <table id="myTable">
+      <tr class="header">
+<th>search_col</th>
+<th>Date_Orig</th>
+<th>WeekDay</th>
+<th>Year</th>
+<th>Month</th>
+<th>DayOfMonth</th>
+<th>DOM</th>
+<th>DayOfYear</th>
+<th>DOY</th>
+<th>DaysInYear</th>
+<th>NumericDate</th>
+<th>DayName_1stJan</th>
+<th>WeekOfYear</th>
+<th>WOY</th>
+</tr>
+<tr>
+<td>2021-02-03 00:00:00 Wednesday 2021 2 3 3 34 34 365 2021.0917808219178 Friday 6 6</td>
+<td>2021-02-03 00:00:00</td>
+<td>Wednesday</td>
+<td>2021</td>
+<td>2</td>
+<td>3</td>
+<td>3</td>
+<td>34</td>
+<td>34</td>
+<td>365</td>
+<td>2021.0917808219178</td>
+<td>Friday</td>
+<td>6</td>
+<td>6</td>
+</tr>
+<tr>
+<td>2022-03-04 00:00:00 Friday 2022 3 4 4 63 63 365 2022.1712328767123 Saturday 10 10</td>
+<td>2022-03-04 00:00:00</td>
+<td>Friday</td>
+<td>2022</td>
+<td>3</td>
+<td>4</td>
+<td>4</td>
+<td>63</td>
+<td>63</td>
+<td>365</td>
+<td>2022.1712328767123</td>
+<td>Saturday</td>
+<td>10</td>
+<td>10</td>
+</tr>
+<tr>
+<td>2023-04-05 00:00:00 Wednesday 2023 4 5 5 95 95 365 2023.2589041095891 Sunday 15 15</td>
+<td>2023-04-05 00:00:00</td>
+<td>Wednesday</td>
+<td>2023</td>
+<td>4</td>
+<td>5</td>
+<td>5</td>
+<td>95</td>
+<td>95</td>
+<td>365</td>
+<td>2023.2589041095891</td>
+<td>Sunday</td>
+<td>15</td>
+<td>15</td>
+</tr>
+<tr>
+<td>2024-05-06 00:00:00 Monday 2024 5 6 6 127 127 366 2024.3456284153006 Monday 19 19</td>
+<td>2024-05-06 00:00:00</td>
+<td>Monday</td>
+<td>2024</td>
+<td>5</td>
+<td>6</td>
+<td>6</td>
+<td>127</td>
+<td>127</td>
+<td>366</td>
+<td>2024.3456284153006</td>
+<td>Monday</td>
+<td>19</td>
+<td>19</td>
+</tr>
+
+    </table>
+
+    <script>
+    function myFunction() {
+      var input, filter, table, tr, td, i, txtValue;
+      input = document.getElementById("myInput");
+      filter = input.value.toUpperCase();
+      table = document.getElementById("myTable");
+      tr = table.getElementsByTagName("tr");
+      for (i = 0; i < tr.length; i++) {
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+          txtValue = td.textContent || td.innerText;
+          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        }
+      }
+    }
+    </script>
+
+    </body>
+    </html>
+    

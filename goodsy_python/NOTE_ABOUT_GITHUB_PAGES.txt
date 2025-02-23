@@ -1,0 +1,12 @@
+Github Pages will render README.md by default unless you create an index.html.
+
+On a Mac M1, nbconvert is broken.
+You need to do from inside Jupyter:
+
+File > Download As > HTML
+File > Download As > Markdown
+
+then:
+
+mv ~/Downloads README.md .
+mv ~/Downloads README.html index.html

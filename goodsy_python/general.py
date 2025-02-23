@@ -24,27 +24,25 @@ def string2hash(ss):
 
 
 # ==============================================================================
-
-def create_wget_string(url,filename):
-    com = 'wget -O ' + filename + ' "' + url + '"'
+#
+def wget(url,filename,go=True):
+    com = 'wget -q -O ' + filename + ' "' + url + '"'
+    if go:
+        os.system(com)
     return com
 #
 # ==============================================================================
 #
-def download_image(url,filename):
-    com = 'wget -O ' + filename + ' "' + url + '"'
-    os.system(com)
-#
-# ==============================================================================
-#
 
-def linux_fastcombine_csvs(my_csv_glob, first_file, outfile):
-    if not os.path.exists(outfile):
-        com = 'ulimit -n 2048; head -n 1 first_file > outfile; tail -n +2 -q my_csv_glob >> outfile;'
-        com = com.replace('outfile', outfile)
-        com = com.replace('my_csv_glob', my_csv_glob)
-        com = com.replace('first_file', first_file)
-        print(com)
+def linux_fastcombine_csvs(my_csv_glob, first_file, outfile, go=False):
+
+    com = f'''
+    ulimit -n 2048;
+    head -n 1 {first_file} > {outfile};
+    tail -n +2 -q {my_csv_glob} >> {outfile};
+    '''
+    print(com)
+    if go:
         os.system(com)
 
 #

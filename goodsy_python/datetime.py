@@ -37,8 +37,10 @@ def date_info_df(my_dt):
         my_dt = my_dt['Dt']
 
     my_dt = pd.to_datetime(my_dt, format="%Y-%m-%d")
-    my_dt = my_dt.dt
+
     dct = {}
+    dct['Date_Orig'] = my_dt.tolist()
+    my_dt = my_dt.dt
     dct['WeekDay'] = my_dt.day_name().tolist()
     dct['Year']    = my_dt.year.tolist()
     dct['Month']   = my_dt.month.tolist()

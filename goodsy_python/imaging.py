@@ -1118,3 +1118,41 @@ def write_png(x, filename, switch_rgb=False, depth=16):
     x = np.flipud(x)
     x = (x*65535).astype(np.uint16)
     cv2.imwrite(filename, x)
+
+
+# Create meaningful image headers from image bounds:
+def create_im_hdr(im, p1, p2, q1, q2):
+
+    naxis2,naxis1,naxis3 = im.size
+
+    # Let's reference everything to the centre of the image:
+    cx0 = naxis1 / 2
+    cy0 = naxis2 / 2
+    cz0 = naxis3 / 2
+    cp0 = 0.5*(p1 + p2)
+    cq0 = 0.5*(q1 + q2)
+
+    cdelt1 = (p2-p1)/naxis1
+    cdelt2 = (q2-q1)/naxis2
+
+    h = {}
+    h['naxis1'] = naxis1
+    h['naxis2'] = naxis2
+    h['naxis3'] = naxis3
+    h['cdelt1'] = cdelt1
+    h['cdelt2'] = cdelt2
+    h['cdelt3'] = 1
+    h['crpix1'] = cx0
+    h['crpix2'] = cy0
+    h['crpix3'] = cz0
+    h['crval1'] = cp0
+    h['crval2'] = cq0
+    h['crval3'] = 0
+    h['crota1'] = 0
+    h['crota2'] = 0
+    h['crota3'] = 0
+
+    return h
+#
+# ==============================================================================
+#
