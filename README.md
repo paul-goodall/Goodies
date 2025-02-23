@@ -1,7 +1,7 @@
 # Goodies
 
-[Repo Main](https://github.com/paul-goodall/Goodies)
-[Repo Webpage](https://paul-goodall.github.io/Goodies/)
+- [Repo Main](https://github.com/paul-goodall/Goodies)
+- [Repo Webpage](https://paul-goodall.github.io/Goodies/)
 
 ## Python Usage:
 
