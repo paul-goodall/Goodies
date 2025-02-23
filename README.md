@@ -1,5 +1,8 @@
 # Goodies
 
+[Repo Main](https://github.com/paul-goodall/Goodies)
+[Repo Webpage](https://paul-goodall.github.io/Goodies/)
+
 ## Python Usage:
 
 See the Goodies-Python page [here](https://paul-goodall.github.io/Goodies/goodsy_python/)
