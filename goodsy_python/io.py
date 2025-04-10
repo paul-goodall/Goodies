@@ -60,6 +60,23 @@ def wTXT(data, outfile, append=False):
     with open(outfile, fmode) as f_txt:
         print(data, file=f_txt)
 
+
+#
+# ==============================================================================
+# SQL
+
+def wSQL(df,tablename,engine,chunksize=100000):
+    df.to_sql(tablename, engine, if_exists='replace', index=False, chunksize=chunksize, method=None)
+
+
+def wGeoSQL(df,tablename,engine,geomcol='geometry'):
+    print('This will rename the "geometry" column to "geom"')
+    df.columns = df.columns.str.lower()
+    df = df.rename(columns={geomcol: "geom"})
+    df = df.set_geometry("geom")
+    df.to_postgis(tablename, engine,if_exists='replace')
+
+
 #
 # ==============================================================================
 # JSON

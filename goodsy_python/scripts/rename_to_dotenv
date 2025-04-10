@@ -1,0 +1,5 @@
+DATABASE_NAME=some_database_name
+DATABASE_HOST=some.database.windows.net
+DATABASE_USERNAME=some_database_user
+DATABASE_PASSWORD=the_password
+DATABASE_PORT=1433
