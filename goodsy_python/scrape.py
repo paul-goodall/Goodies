@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+import time
 
 # ==============================================================================
 
@@ -36,25 +37,36 @@ def get_elements(driver, searchstr, eltype='css selector'):
 
 def get_element_keep_trying(driver,css_str):
 
+    max_tries = 30
     try_count = 1
-    while try_count > 0:
+    while try_count < max_tries:
+        print(f'Trying [{css_str}] - [{try_count}]')
+        elem = ''
         try:
-          elems = get_elements(driver, css_str)
-        except:
-          elems = []
+          elem = get_elements(driver, css_str)[0]
+        except IndexError:
           try_count += 1
           time.sleep(1)
         else:
-            if len(elems) > 0:
-                elem = elems[0]
-                try_count = -1
+            max_tries = -1
 
     return elem
 
 # ==============================================================================
 
+def wait_until_url_contains_str(driver,str):
+
+    try_count = 1
+    while try_count > 0:
+        print(f'Waiting for URL to contain [{str}] - [{try_count}]')
+        if str in driver.current_url:
+            try_count = -1
+        else:
+            try_count += 1
+            time.sleep(1)
 
 
+# ==============================================================================
 
 
 
